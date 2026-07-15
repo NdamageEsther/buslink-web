@@ -73,83 +73,51 @@ export default function DriversPage() {
   }
 
   async function handleAdd(e: React.FormEvent) {
-    e.preventDefault();
-    if (!form.name || !form.email || !form.phone || !form.password) {
-      setAddError("Name, email, phone and password are required.");
-      return;
-    }
-    if (form.password !== form.confirmPassword) {
-      setAddError("Passwords do not match.");
-      return;
-    }
-    if (form.password.length < 6) {
-      setAddError("Password must be at least 6 characters.");
-      return;
-    }
-
-    setAddLoading(true);
-    setAddError("");
-
-    try {
-      // Step 1: Get current agency admin's profile to get agencyId
-      const profileRes = await api.get("/users/profile");
-      const agencyId   = profileRes.data?.user?.agencyId || profileRes.data?.agencyId;
-
-      if (!agencyId) {
-        setAddError("Could not determine your agency. Please contact support.");
-        setAddLoading(false);
-        return;
-      }
-
-      // Step 2: Register the driver account
-      // NOTE: Backend currently ignores role/agencyId in /auth/register
-      // The backend team needs to support role=DRIVER + agencyId in registration
-      const regRes = await api.post("/auth/register", {
-        name:      form.name,
-        email:     form.email,
-        phone:     form.phone,
-        password:  form.password,
-        role:      "DRIVER",
-        agencyId,
-      });
-
-      const newUserId = regRes.data?.user?.id;
-
-      // Step 3: Try to link user to agency as driver via drivers endpoint
-      // Try multiple possible endpoints
-      if (newUserId) {
-        await api.post("/drivers", {
-          userId:        newUserId,
-          agencyId,
-          licenseNumber: form.licenseNumber || undefined,
-          busId:         form.busId || undefined,
-        }).catch(() =>
-          api.post("/drivers/create", {
-            userId:        newUserId,
-            agencyId,
-            licenseNumber: form.licenseNumber || undefined,
-            busId:         form.busId || undefined,
-          }).catch(() => {
-            // If no driver linking endpoint, the registration alone is the best we can do
-          })
-        );
-      }
-
-      showSuccess(`Driver "${form.name}" created successfully! They can now log in with: ${form.email}`);
-      setForm({ name:"", email:"", phone:"", password:"", confirmPassword:"", licenseNumber:"", busId:"" });
-      setShowAddModal(false);
-      fetchAll();
-    } catch (err: any) {
-      const msg = err?.response?.data?.message || err?.response?.data?.error || "";
-      if (msg.toLowerCase().includes("already") || msg.toLowerCase().includes("exist")) {
-        setAddError("A user with this email already exists.");
-      } else {
-        setAddError(msg || "Failed to create driver. Please try again.");
-      }
-    } finally {
-      setAddLoading(false);
-    }
+  e.preventDefault();
+  if (!form.name || !form.email || !form.phone || !form.password) {
+    setAddError("Name, email, phone and password are required.");
+    return;
   }
+  if (form.password !== form.confirmPassword) {
+    setAddError("Passwords do not match.");
+    return;
+  }
+  if (form.password.length < 6) {
+    setAddError("Password must be at least 6 characters.");
+    return;
+  }
+
+  setAddLoading(true);
+  setAddError("");
+
+  try {
+    // POST /users/driver — Agency Admin creates driver
+    // Backend automatically creates User + Driver records linked to agency
+    const res = await api.post("/users/driver", {
+      name:          form.name,
+      email:         form.email,
+      phone:         form.phone,
+      password:      form.password,
+      licenseNumber: form.licenseNumber || "N/A",
+    });
+
+    const driverName = res.data?.user?.name || res.data?.name || form.name;
+
+    showSuccess(`Driver "${driverName}" created successfully! They can now log in with: ${form.email}`);
+    setForm({ name:"", email:"", phone:"", password:"", confirmPassword:"", licenseNumber:"", busId:"" });
+    setShowAddModal(false);
+    fetchAll(); // refresh the table
+  } catch (err: any) {
+    const msg = err?.response?.data?.message || err?.response?.data?.error || "";
+    if (msg.toLowerCase().includes("already") || msg.toLowerCase().includes("exist")) {
+      setAddError("A user with this email already exists.");
+    } else {
+      setAddError(msg || "Failed to create driver. Please try again.");
+    }
+  } finally {
+    setAddLoading(false);
+  }
+}
 
   function getDriverName(d: Driver)  { return d.user?.name  || d.name  || "—"; }
   function getDriverEmail(d: Driver) { return d.user?.email || d.email || "—"; }

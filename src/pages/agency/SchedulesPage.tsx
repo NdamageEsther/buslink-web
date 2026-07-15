@@ -119,12 +119,25 @@ export default function SchedulesPage() {
                 <option value="">Select Bus</option>
                 {buses.map(b => <option key={b.id} value={b.id}>{b.plateNumber} (cap: {b.capacity})</option>)}
               </select>
-              {drivers.length > 0 && (
-                <select value={form.driverId} onChange={e => setForm(p => ({ ...p, driverId: e.target.value }))} className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                  <option value="">Select Driver (optional)</option>
-                  {drivers.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                </select>
-              )}
+              <select
+  value={form.driverId}
+  onChange={e => setForm(p => ({ ...p, driverId: e.target.value }))}
+  className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+>
+  <option value="">
+    {drivers.length === 0 ? "No drivers added yet — go to Drivers page first" : "Select Driver (optional)"}
+  </option>
+  {drivers.map(d => (
+    <option key={d.id} value={d.id}>
+      {d.name || d.user?.name} {d.licenseNumber ? `— ${d.licenseNumber}` : ""}
+    </option>
+  ))}
+</select>
+{drivers.length === 0 && (
+  <p style={{ fontSize: "12px", color: "#f59e0b", marginTop: "4px" }}>
+    ⚠️ Add drivers from the <strong>Drivers</strong> page before assigning them to schedules.
+  </p>
+)}
               <div>
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block mb-1">Departure Time</label>
                 <input type="datetime-local" value={form.departureTime} onChange={e => setForm(p => ({ ...p, departureTime: e.target.value }))} className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
