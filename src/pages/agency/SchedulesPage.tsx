@@ -3,7 +3,12 @@ import api from "../../services/api";
 
 interface Route { id: string; fromStation?: any; toStation?: any; }
 interface Bus { id: string; plateNumber: string; capacity: number; }
-interface Driver { id: string; name: string; }
+interface Driver {
+  id: string;
+  name?: string;
+  licenseNumber?: string;
+  user?: { name?: string; email?: string; phone?: string };
+}
 interface Schedule {
   id: string; route?: Route; bus?: Bus; driver?: Driver;
   routeId?: string; busId?: string; driverId?: string;

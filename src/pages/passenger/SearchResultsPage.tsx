@@ -53,9 +53,8 @@ const filtered = all
     .filter(s => {
       const fromLower   = from.toLowerCase().trim();
       const toLower     = to.toLowerCase().trim();
-      const stationFrom = (s.route?.fromStation?.name || s.fromStation?.name || '').toLowerCase();
-      const stationTo   = (s.route?.toStation?.name   || s.toStation?.name   || '').toLowerCase();
-
+      const stationFrom = (s.route?.fromStation?.name || (s as any).fromStation?.name || '').toLowerCase();
+const stationTo   = (s.route?.toStation?.name   || (s as any).toStation?.name   || '').toLowerCase();
       // Match both ways: "Huye" matches "HUYE bus station" and vice versa
       const fromMatch = !fromLower || stationFrom.includes(fromLower) || fromLower.includes(stationFrom);
       const toMatch   = !toLower   || stationTo.includes(toLower)     || toLower.includes(stationTo);
